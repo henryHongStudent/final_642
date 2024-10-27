@@ -1,0 +1,63 @@
+{% extends "base.html" %} {% block content %}
+<div class="container mt-5">
+  <h1 class="mb-4">Confirm Your Order</h1>
+  <h2>Selected Items</h2>
+  <ul>
+    {% for item in selected_items %}
+    <li>
+      {{ item['name'] }} - Quantity: {{ item['quantity'] }} - Price: ${{
+      item['price'] }}
+    </li>
+    {% endfor %}
+  </ul>
+  <h3>Total Price: ${{ total_price | round(2) }}</h3>
+
+  <h2>Payment Method</h2>
+  <form method="POST" action="/confirm_order">
+    <div class="form-group">
+      <label for="payment_method">Select Payment Method:</label>
+      <select name="payment_method" id="payment_method" class="form-control">
+        <option value="credit_card">Credit Card</option>
+        <option value="debit_card">Debit Card</option>
+        <option value="account_charge">Charge to Account</option>
+      </select>
+
+      <h2 class="mt-5">Payment Method</h2>
+      <div class="form-check">
+        <input
+          class="form-check-input"
+          type="radio"
+          name="payment_method"
+          id="creditCard"
+          value="credit_card"
+          checked
+        />
+        <label class="form-check-label" for="creditCard"> Credit Card </label>
+      </div>
+      <div class="form-check">
+        <input
+          class="form-check-input"
+          type="radio"
+          name="payment_method"
+          id="debitCard"
+          value="debit_card"
+        />
+        <label class="form-check-label" for="debitCard"> Debit Card </label>
+      </div>
+      <div class="form-check">
+        <input
+          class="form-check-input"
+          type="radio"
+          name="payment_method"
+          id="accountCharge"
+          value="account_charge"
+        />
+        <label class="form-check-label" for="accountCharge">
+          Charge to Account
+        </label>
+      </div>
+    </div>
+    <button type="submit" class="btn btn-primary">Place Order</button>
+  </form>
+</div>
+{% endblock %}

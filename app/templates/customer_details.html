@@ -1,0 +1,12 @@
+{% extends "base.html" %} {% block content %}
+<h2>My Details</h2>
+<div class="card">
+  <div class="card-body">
+    <h5 class="card-title">{{ customer.firstName }} {{ customer.lastName }}</h5>
+    <p class="card-text">Address: {{ customer.address }}</p>
+    <p class="card-text">Balance: ${{ customer.balance }}</p>
+    <p class="card-text">Max Owing: ${{ customer.maxOwing }}</p>
+    <p class="card-text">Customer ID: {{ customer.custID }}</p>
+  </div>
+</div>
+{% endblock %}

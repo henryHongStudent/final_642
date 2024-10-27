@@ -1,0 +1,18 @@
+{% extends "base.html" %} {% block content %}
+<h2>Customer List</h2>
+
+{% if customers %}
+<ul class="list-group">
+  {% for customer in customers %}
+  <li class="list-group-item">
+    <strong>Name:</strong> {{ customer.first_name }} {{ customer.last_name }}<br />
+    <strong>Username:</strong> {{ customer.username }}<br />
+    <strong>Address:</strong> {{ customer.cust_address }}<br />
+    <strong>Balance:</strong> ${{ customer.cust_balance }}<br />
+    <strong>Max Owing:</strong> ${{ customer.max_owing }}
+  </li>
+  {% endfor %}
+</ul>
+{% else %}
+<p>No customers found.</p>
+{% endif %} {% endblock %}

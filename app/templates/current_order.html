@@ -1,0 +1,68 @@
+{% extends "base.html" %} {% block content %}
+<div class="container mt-5">
+  <h2 class="mb-4">Current Orders</h2>
+  <pre>{{current_order}}</pre>
+  {% if current_order %}
+  <table class="table table-bordered table-striped">
+    <thead class="thead-light">
+      <tr>
+        <th>Order Number</th>
+        <th>Order Date</th>
+        <th>Customer Name</th>
+        <th>Status</th>
+        <th>Total Order Price</th>
+        <th>Action</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for order in current_order %}
+      <tr class="table-primary">
+        <td>{{ order.order_number }}</td>
+        <td>{{ order.order_date }}</td>
+        <td>{{ order.customer_name }}</td>
+        <td>{{ order.order_status }}</td>
+        <td>${{ order.total_order_price }}</td>
+        <td>
+          {% if order.order_status == 'Pending' %}
+          <form action="{{ url_for('current_order') }}" method="post">
+            <input type="hidden" name="order_id" value="{{ order.order_id }}" />
+            <button type="submit" class="btn btn-danger btn-sm">
+              Cancel Order
+            </button>
+          </form>
+          {% else %}
+          <span class="text-muted">Cannot cancel</span>
+          {% endif %}
+        </td>
+      </tr>
+      <!-- Nested row for items in this order -->
+      <tr>
+        <td colspan="5">
+          <table class="table table-sm table-borderless mb-0">
+            <thead>
+              <tr class="table-secondary">
+                <th>Item</th>
+                <th>Quantity</th>
+                <th>Price</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for item in order["items"] %}
+              <tr>
+                <td>{{ item.vegName }}</td>
+                <td>{{ item.quantity }}</td>
+                <td>${{ item.price }}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <p>No current orders available.</p>
+  {% endif %}
+</div>
+{% endblock %}

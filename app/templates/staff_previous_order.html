@@ -1,0 +1,55 @@
+{% extends "base.html" %} {% block content %}
+<div class="container mt-5">
+  <h2 class="mb-4">Previous Orders</h2>
+
+  {% if previous_order %}
+  <table class="table table-bordered table-striped">
+    <thead class="thead-light">
+      <tr>
+        <th>Order Number</th>
+        <th>Order Date</th>
+        <th>Customer Name</th>
+        <th>Status</th>
+        <th>Total Order Price</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for order in previous_order %}
+      <tr class="table-primary">
+        <td>{{ order.order_number }}</td>
+        <td>{{ order.order_date }}</td>
+        <td>{{ order.customer_name }}</td>
+        <td>{{ order.order_status }}</td>
+        <td>${{ order.total_order_price }}</td>
+      </tr>
+      <!-- Nested row for items in this order -->
+      <tr>
+        <td colspan="5">
+          <table class="table table-sm table-borderless mb-0">
+            <thead>
+              <tr class="table-secondary">
+                <th>Item</th>
+                <th>Quantity</th>
+                <th>Price</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for item in order["items"] %}
+              <tr>
+                <td>{{ item.vegName }}</td>
+                <td>{{ item.quantity }}</td>
+                <td>${{ item.price }}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <p>No current orders available.</p>
+  {% endif %}
+</div>
+{% endblock %}

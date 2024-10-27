@@ -1,0 +1,32 @@
+{% extends "base.html" %} {% block content %}
+<div class="container mt-4">
+  <h2>User Profile</h2>
+
+  {% if user %}
+  <div class="card">
+    <div class="card-body">
+      <h5 class="card-title">{{ user.first_name }} {{ user.last_name }}</h5>
+      <p class="card-text"><strong>Username:</strong> {{ user.username }}</p>
+
+      {% if user.__class__.__name__ == 'Staff' %}
+      <p class="card-text"><strong>Role:</strong> Staff</p>
+      <p class="card-text">
+        <strong>Date Joined:</strong> {{ user.date_joined }}
+      </p>
+      <p class="card-text"><strong>Department:</strong> {{ user.dept_name }}</p>
+
+      {% elif user.__class__.__name__ == 'Customer' %}
+      <p class="card-text"><strong>Role:</strong> Customer</p>
+      <p class="card-text"><strong>Address:</strong> {{ user.cust_address }}</p>
+      <p class="card-text">
+        <strong>Balance:</strong> ${{ user.cust_balance }}
+      </p>
+      <p class="card-text"><strong>Max Owing:</strong> ${{ user.max_owing }}</p>
+      {% endif %}
+    </div>
+  </div>
+  {% else %}
+  <p>No user profile found.</p>
+  {% endif %}
+</div>
+{% endblock %}
