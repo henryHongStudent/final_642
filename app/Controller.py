@@ -2,7 +2,7 @@ from app.userModel import Item, Veggie, CreditCardPayment,DebitCardPayment,Weigh
 from sqlalchemy import func
 from sqlalchemy.orm import joinedload
 from app import db_session
-from flask import session
+from flask import session,flash
 from datetime import datetime
 from datetime import datetime, timedelta
 from sqlalchemy import func
@@ -12,45 +12,51 @@ from sqlalchemy import func
 class Controller:
     def __init__(self, db_session):
         self.db_session = db_session
-        
 
+# Login 
     def login(self, username, password):
         try:
-           user = db_session.query(Person).filter(Person.username == username, Person.password == password).first()
-           if user:
-                user_info = db_session.query(Person).filter(Person.id == user.id).first()
-                result = Person.get_login_user_details( user_info)
-                print("=========================================================================")
-                
-                print(result)
+            user = self.db_session.query(Person).filter(Person.username == username, Person.password == password).first()
+            if user:
+                user_info = self.db_session.query(Person).filter(Person.id == user.id).first()
+                result = Person.get_login_user_details(user_info)
+                if result:
+                    return result
 
-                print("=========================================================================")
 
-           return  result
+            flash('Invalid username or password. Please try again.', 'danger')
+            return None
 
         except Exception as e:
+            print("=========================================================================")
             print(f"An error occurred during login: {str(e)}")
-            return False
+            print("=========================================================================")
+            flash('An error occurred during login. Please try again later.', 'danger')
+            return None
         finally:
             self.db_session.close()
 
-        # ... (나머지 메서드들)
-
+# Logout
     def logout(self):
         try:
             session.clear()
             return True
         except Exception as e:
+            print("=========================================================================")
             print(f"An error occurred during logout: {str(e)}")
+            print("=========================================================================")
+        
             return False
+
+    # get all customer list
     def get_all_customers(self):
         try:
-            # 데이터베이스에서 고객 목록 가져오기
+          
             users = db_session.query(Person).filter(Person.type == 'customer').all()
             result = []
-            
+
             if users:
-                # 각 사용자에 대해 get_all_user() 메서드를 호출
+                
                 result = [user.get_all_user() for user in users]
             return result
 
@@ -58,7 +64,7 @@ class Controller:
             print("=========================================================================")
             print(f"An error occurred during get_all_customer: {str(e)}")
             print("=========================================================================")
-            
+
             return False
         finally:
             self.db_session.close()
@@ -77,16 +83,19 @@ class Controller:
                 }
             return None
         except Exception as e:
+            print("=========================================================================")
             print(f"An error occurred in fetching user balance: {str(e)}")
+            print("=========================================================================")
+
             return None
         finally:
             self.db_session.close()
 
 
-            
-            
+
+
     def get_weighted_veggies(self):
-  
+
         try:
             weighted_veggies = self.db_session.query(Veggie, WeightedVeggie).join(WeightedVeggie, Veggie.id == WeightedVeggie.veggie_id).all()
             weighted_veggies_result = []
@@ -99,7 +108,10 @@ class Controller:
                 })
             return weighted_veggies_result
         except Exception as e:
+            print("=========================================================================")
             print(f"An error occurred in fetching weighted veggies: {str(e)}")
+            print("=========================================================================")
+           
             return None
         finally :
             self.db_session.close()
@@ -116,7 +128,9 @@ class Controller:
                 })
             return unit_price_veggies_result
         except Exception as e:
+            print("=========================================================================")
             print(f"An error occurred in fetching unit price veggies: {str(e)}")
+            print("=========================================================================")
             return None
         finally :
             self.db_session.close()
@@ -133,7 +147,10 @@ class Controller:
                 })
             return packed_veggies_result
         except Exception as e:
+            print("=========================================================================")
             print(f"An error occurred in fetching pack veggies: {str(e)}")
+            print("=========================================================================")
+
             return None
         finally :
             self.db_session.close()
@@ -152,7 +169,10 @@ class Controller:
                 })
             return premade_boxes_result
         except Exception as e:
+            print("=========================================================================")
             print(f"An error occurred in fetching premade boxes: {str(e)}")
+            print("=========================================================================")
+
             return None
         finally:
             self.db_session.close()
@@ -166,18 +186,24 @@ class Controller:
                 print(f"Item with ID {item_id} does not have a valid price.")
                 return None
         except Exception as e:
+            print("=========================================================================")
             print(f"An error occurred in fetching item by ID: {str(e)}")
+            print("=========================================================================")
             return None
 
 
 
 
     def place_order(self, customer_id, items):
-        # 세션 확인
         if not session:
             return None
 
-        # 주문할 아이템 딕셔너리 생성
+        total_amount = items.get('total_price')
+        
+        if total_amount ==0:
+            flash('No items selected for purchase.', 'danger')
+            return None
+        
         order_items = {}
         for key, value in items.items():
             if key.startswith('item_'):
@@ -186,7 +212,7 @@ class Controller:
                 if quantity > 0:
                     order_items[item_id] = quantity
 
-        # 주문 생성
+        # Create a new order
         order = Order(
             order_customer=customer_id,
             order_date=datetime.now(),
@@ -194,11 +220,11 @@ class Controller:
             order_status='Pending'
         )
 
-        # 주문을 데이터베이스에 추가
+     
         self.db_session.add(order)
-        self.db_session.flush()  # ID 생성을 위해 flush
+        self.db_session.flush()  
 
-        # 주문 라인 아이템 생성
+        # Create order line items
         for item_id, quantity in order_items.items():
             if quantity > 0:
                 order_line = OrderLine(
@@ -208,14 +234,14 @@ class Controller:
                 )
                 self.db_session.add(order_line)
 
-        # 결제 정보 추출
-        total_amount = items.get('total_price')
+        # Extract payment information
+
         payment_method = items.get('payment_method')
         card_expiry_date = items.get('card_expiry_date')
         card_number = items.get('card_number')
         card_type = items.get('card_type')
-
-        # 결제 생성
+   
+        # Create payment
         if payment_method == 'credit_card':
             payment = CreditCardPayment(
                 payment_id=None,
@@ -228,29 +254,30 @@ class Controller:
                 card_type=card_type
             )
         elif payment_method == 'debit_card':
+            bank_name=items.get('bank_name')
             payment = DebitCardPayment(
                 payment_id=None,
                 payment_date=datetime.now(),
                 payment_amount=float(total_amount),
                 payment_method=payment_method,
                 customer_id=customer_id,
-                bank_name="Bank Name",
+                bank_name=bank_name,
                 debit_card_number=card_number
             )
         elif payment_method == 'account_charge':
-            # 고객 정보 조회
+            # Retrieve customer information
             customer = self.db_session.query(Customer).filter_by(id=customer_id).first()
             if not customer:
                 print(f"Customer with ID {customer_id} not found.")
                 return None
 
-            # 주문 가능 여부 확인
+            # Check if order can be placed
             available_credit = customer.max_owing - customer.cust_balance
             if float(total_amount) > available_credit:
-                print(f"Order rejected. Total amount ({total_amount}) exceeds available credit ({available_credit}).")
+                flash(f"Order rejected. Total amount ({total_amount}) exceeds available credit ({available_credit}).")
                 return None
 
-            # 주문 처리 및 고객 잔액 업데이트
+            # Process order and update customer balance
             customer.cust_balance += float(total_amount)
             payment = Payment(
                 payment_id=None,
@@ -260,34 +287,14 @@ class Controller:
                 customer_id=customer_id
             )
 
-        
-        
         self.db_session.add(payment)
-
-    
         self.db_session.commit()
-
-        # # 디버깅을 위한 출력
-        # print("Order placed successfully!") 
-        # print("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++")
-        # print("Order Items:")
-        # print(order_items)
-        # print("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++")
-        # print("Payment Details:")
-        # print(f"Payment ID: {payment.payment_id}")
-        # print(f"Payment Date: {payment.payment_date}")
-        # print(f"Payment Amount: {payment.payment_amount}")
-        # print(f"Payment Method: {payment.payment_method}")
-        # print(f"Customer ID: {payment.customer_id}")
-        # print("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++")
-        # print(f"Card Expiry Date: {card_expiry_date}")
-        # print(f"Card Number: {card_number}")
-        # print(f"Card Type: {card_type}")
-        # print("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++")
+  
 
         return order
 
-    
+
+
     def get_current_order(self, customer_id):
         current_order = []  # List to store each order's details
 
@@ -333,21 +340,19 @@ class Controller:
 
             # Add each order to current_order list
             current_order = list(order_details.values())
-            print("+++++++++++++++++++++++++++++++++++++++++++++")
-            print(current_order)  # Print the current_order list for debugging purposes
-            print("+++++++++++++++++++++++++++++++++++++++++++++")
-
             return current_order
 
         except Exception as e:
+            print("=========================================================================")
             print(f"An error occurred while fetching current order: {str(e)}")
+            print("=========================================================================")
             return None
 
         finally:
             self.db_session.close()
 
-            
-    
+
+
     def all_current_orders(self):
         try:
             # Fetch all pending orders
@@ -384,11 +389,13 @@ class Controller:
             return current_orders
 
         except Exception as e:
+            print("=========================================================================")
             print(f"An error occurred while fetching all current orders: {str(e)}")
+            print("=========================================================================")
             return None
 
         finally:
-           
+
             self.db_session.close()
 
     def get_previous_order(self, customer_id):
@@ -410,7 +417,7 @@ class Controller:
 
             # Dictionary to accumulate each unique order's details
             order_details = {}
-            
+
             # Organize query results into order details
             for order, order_line, item, person in order_query:
                 if order.id not in order_details:
@@ -440,12 +447,14 @@ class Controller:
             return previous_order
 
         except Exception as e:
+            print("=========================================================================")
             print(f"An error occurred while fetching current order: {str(e)}")
+            print("=========================================================================")
             return None
 
         finally:
             self.db_session.close()
-            
+
     def all_previous_orders(self):
         try:
             # Fetch all completed orders
@@ -483,12 +492,14 @@ class Controller:
             return previous_orders
 
         except Exception as e:
+            print("=========================================================================")
             print(f"An error occurred while fetching previous orders: {str(e)}")
+            print("=========================================================================")
             return None
 
         finally:
             self.db_session.close()
-            
+
     def cancel_order(self, order_id):
         try:
             # Fetch the order to be canceled
@@ -503,36 +514,40 @@ class Controller:
 
         except Exception as e:
             self.db_session.rollback()
+            print("=========================================================================")
             print(f"An error occurred while canceling the order: {str(e)}")
+            print("=========================================================================")
             return False
 
         finally:
             self.db_session.close()
-            
+
 
     def update_order_status_to_database(self, order_id, status):
             try:
                 # Fetch the order
                 order = self.db_session.query(Order).filter(Order.id == order_id).first()
-                
+
                 if not order:
                     print(f"Order with id {order_id} not found.")
                     return False
-                
+
                 # Update the order status
                 order.order_status = status
-                
+
                 # Commit the changes
                 self.db_session.commit()
-                
+
                 print(f"Order status updated successfully for order {order_id}.")
                 return True
-        
+
             except Exception as e:
                 self.db_session.rollback()
+                print("=========================================================================")
                 print(f"An error occurred while updating the order status: {str(e)}")
+                print("=========================================================================")
                 return False
-        
+
             finally:
                 self.db_session.close()
 
@@ -541,13 +556,13 @@ class Controller:
             now = datetime.now()
             if period == 'week':
                 start_date = now - timedelta(days=7)
-                date_format = "%Y-%m-%d"  # 년-월-일
+                date_format = "%Y-%m-%d"  
             elif period == 'month':
                 start_date = now.replace(day=1)
-                date_format = "%Y-%m"  # 년-월
+                date_format = "%Y-%m"  
             elif period == 'year':
                 start_date = now.replace(month=1, day=1)
-                date_format = "%Y"  # 년
+                date_format = "%Y"  
             else:
                 raise ValueError("Invalid period. Use 'week', 'month', or 'year'.")
 
@@ -568,13 +583,15 @@ class Controller:
             }
 
         except Exception as e:
+            print("=========================================================================")
             print(f"An error occurred while generating total sales: {str(e)}")
+            print("=========================================================================")
             return None
 
         finally:
             self.db_session.close()
 
-    
+
 
     def view_popular_items(self):
         # Query to get the sum of quantities for each item

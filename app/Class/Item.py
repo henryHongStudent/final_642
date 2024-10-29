@@ -19,12 +19,11 @@ class Items(ABC):
     def get_sale_count(self):
         return self._sale_count
     def __str__(self):
-        return f"{self._itemName}: ${self.get_price():.2f} (Sold: {self.get_sale_count()})"  # 아이템 이름과 가격 및 판매 수 출력
-
+        return f"{self._itemName}: ${self.get_price():.2f} (Sold: {self.get_sale_count()})"  
 
 class Veggie(Items):
     def __init__(self, vegName):
-        super().__init__(vegName, 0)  # 초기 가격은 0
+        super().__init__(vegName, 0)  
         self._vegName = vegName
 
     @property
@@ -39,7 +38,7 @@ class Veggie(Items):
         return self._itemPrice
 
     def __str__(self):
-        return f"Vegetable: {self._vegName}"  # 채소 이름 출력
+        return f"Vegetable: {self._vegName}"  
 
 
 class WeightedVeggie(Veggie):

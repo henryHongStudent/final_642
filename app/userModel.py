@@ -43,7 +43,9 @@ class Person(Base):
         return f"Person({self.first_name} {self.last_name}, {self.username})"
     
     def get_login_user_details(self):
-        """사용자의 모든 정보를 반환하는 메서드"""
+
+        """Method to return all information of the user"""
+
         if self.type == 'staff':
             return {
                 'id': self.id,
@@ -67,7 +69,7 @@ class Person(Base):
                 'max_owing': self.customer.max_owing
             }
     def get_all_user(self):
-            """사용자의 모든 정보를 반환하는 메서드"""
+            """Method to return all information of the user"""
             return {
                     'id': self.id,
                     'first_name': self.first_name,
@@ -87,13 +89,13 @@ class Staff(Person):
     date_joined = Column(Date)
     dept_name = Column(String(50))
     
-    # Define back reference to Person
+
     person = relationship('Person', back_populates='staff', uselist=False)
     __mapper_args__ = {
         'polymorphic_identity': 'staff',
     }
     def __init__(self, first_name, last_name, username, password, date_joined, dept_name):
-        super().__init__(first_name, last_name, username, password)  # Call parent constructor
+        super().__init__(first_name, last_name, username, password) 
         self.date_joined = date_joined
         self.dept_name = dept_name
 
@@ -115,7 +117,7 @@ class Customer(Person):
     person = relationship('Person', back_populates='customer', uselist=False)
 
     def __init__(self, first_name, last_name, username, password, cust_address, cust_balance, max_owing):
-        super().__init__(first_name, last_name, username, password)  # Call parent constructor
+        super().__init__(first_name, last_name, username, password)
         self.cust_address = cust_address
         self.cust_balance = cust_balance
         self.max_owing = max_owing
@@ -125,11 +127,10 @@ class Customer(Person):
 
 
     def process_payment(self, amount, payment_method):
+        """method to process payment using different payment methods"""
         if payment_method == 'credit_card':
-            # Implement credit card payment logic
             pass
         elif payment_method == 'debit_card':
-            # Implement debit card payment logic
             pass
         elif payment_method == 'account_charge':
             if self.cust_balance >= amount:
@@ -153,7 +154,6 @@ class CorporateCustomer(Customer):
 
     def __init__(self, first_name, last_name, username, password, cust_address, cust_balance, max_owing, 
                  discount_rate, max_credit, min_balance):
-        # Call the parent class (Customer) constructor
         super().__init__(first_name, last_name, username, password, cust_address, cust_balance, max_owing)
         self.discount_rate = discount_rate
         self.max_credit = max_credit
@@ -173,8 +173,7 @@ class Order(Base):
     
     person = relationship("Person", back_populates="orders")
     customer = relationship("Customer", back_populates="list_of_orders")
-    order_lines = relationship("OrderLine", back_populates="order")  # 추가된 관계
-
+    order_lines = relationship("OrderLine", back_populates="order")  
     def __init__(self, order_customer, order_date, order_number, order_status):
         self.order_person_id = order_customer
         self.order_date = order_date
@@ -224,14 +223,15 @@ class Veggie(Item):
     }
 
     def get_price(self):
+        """method to calculate price"""
         if self.weighted_veggie:
             return self.weighted_veggie.weight * self.weighted_veggie.weightPerKilo
         elif self.pack_veggie:
             return self.pack_veggie.numOfPack * self.pack_veggie.pricePerPack
         elif self.unit_price_veggie:
             return self.unit_price_veggie.pricePerUnit * self.unit_price_veggie.quantity
-        else:  # None of the above conditions are met
-            return 0  # 또는 적절한 기본값
+        else:  
+            return 0  
 
 
 class WeightedVeggie(Base):
@@ -276,6 +276,7 @@ class PremadeBox(Item):
     }
     
     def get_total_price(self):
+        """method to calculate total price of premade box"""
         return sum(veggie.get_price() for veggie in self.boxContent)
 
 class Payment(Base):
@@ -289,8 +290,8 @@ class Payment(Base):
     customer = relationship("Customer", back_populates="list_of_payments")
     nextId = 2114
     def __init__(self, payment_id, payment_date, payment_amount, payment_method, customer_id):
-        self.payment_id = f"PAY{Payment.nextId}"  # nextId 사용
-        Payment.nextId += 1  # 다음 번호를 위해 증가
+        self.payment_id = f"PAY{Payment.nextId}" 
+        Payment.nextId += 1  
         self.payment_date = payment_date
         self.payment_amount = payment_amount
         self.payment_method = payment_method

@@ -170,36 +170,36 @@ class CorporateCustomer(Customer):
         self._minBalance = minBalance
 
 def main():
-    # Staff 인스턴스 생성
+  
     staff_member = Staff("Alice", "Johnson", "securePassword", "ajohnson", "2023-01-01", "Sales", [], [], [], "S001", [])
     
-    # Staff 메소드 테스트
+
     print("Staff Info:")
     print(f"Name: {staff_member.firstName} {staff_member.lastName}")
-    staff_member.login()  # Staff 로그인
-    staff_member.logout()  # Staff 로그아웃
+    staff_member.login()
+    staff_member.logout()  
 
-    # Customer 인스턴스 생성
+
     customer1 = Customer("Bob", "Smith", "password", "bsmith", "123 Street", 100.0, "C001", 50.0)
     
-    # Customer 메소드 테스트
+  
     print("\nCustomer Info:")
     print(f"Name: {customer1.firstName} {customer1.lastName}")
-    customer1.deposit(50.0)  # 잔고에 50 추가
-    print(f"New Balance: {customer1._custBalance}")  # 업데이트된 잔고 출력
-    customer1.login()  # Customer 로그인
-    customer1.logout()  # Customer 로그아웃
+    customer1.deposit(50.0) 
+    print(f"New Balance: {customer1._custBalance}") 
+    customer1.login()  
+    customer1.logout()  
 
-    # CorporateCustomer 인스턴스 생성
+   
     corp_customer = CorporateCustomer("Charlie", "Brown", "corpPassword", "cbrown", "456 Avenue", 500.0, "C002", 100.0, 0.1, 1000.0, 200.0)
     
-    # CorporateCustomer 메소드 테스트
+  
     print("\nCorporate Customer Info:")
     print(f"Name: {corp_customer.firstName} {corp_customer.lastName}")
     print(f"Discount Rate: {corp_customer.discountRate}")
     print(f"Max Credit: {corp_customer.maxCredit}")
     print(f"Min Balance: {corp_customer.minBalance}")
-    corp_customer.login()  # CorporateCustomer 로그인
-    corp_customer.logout()  # CorporateCustomer 로그아웃
+    corp_customer.login()  
+    corp_customer.logout()  
 if __name__ == "__main__":
     main()

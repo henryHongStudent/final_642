@@ -6,7 +6,7 @@ from decimal import Decimal
 from app.userModel import Base,UnitPriceVeggie, CreditCardPayment, DebitCardPayment, PremadeBox, Person, Staff, Customer, CorporateCustomer, Order, OrderLine, Item, Veggie, WeightedVeggie, PackVeggie
 
 # 엔진 생성
-engine = create_engine('mysql+pymysql://HenryHong91:Tmd%4078799858@HenryHong91.mysql.pythonanywhere-services.com/final_642', echo=True)
+engine = create_engine('mysql+pymysql://root:Tmd%4078799858@localhost:3306/final_642', echo=True)
 Base.metadata.drop_all(engine)
 # # 데이터베이스 테이블 생성
 Base.metadata.create_all(engine)

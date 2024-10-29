@@ -4,6 +4,7 @@
     id="orderForm"
     method="POST"
     action="{{ url_for('place_order_process') }}"
+    novalidate
   >
     <h1 class="mb-4">Order Items</h1>
     <input type="hidden" name="total_price" id="total_price" value="0" />
@@ -101,36 +102,85 @@
       </tfoot>
     </table>
 
-    <label for="payment_method">Select Payment Method:</label>
-    <select
-      name="payment_method"
-      id="payment_method"
-      class="form-control"
-      onchange="togglePaymentFields()"
-    >
-      <option value="credit_card">Credit Card</option>
-      <option value="debit_card">Debit Card</option>
-      <option value="account_charge">Charge to Account</option>
-    </select>
+    {% if session["type"]=="customer" %}
+    <div class="form-group">
+      <label for="payment_method">Select Payment Method:</label>
+      <select
+        name="payment_method"
+        id="payment_method"
+        class="form-control"
+        onchange="togglePaymentFields()"
+        required
+      >
+        <option value="">Select Payment Method</option>
+        <option value="credit_card">Credit Card</option>
+        <option value="debit_card">Debit Card</option>
+        <option value="account_charge">Charge to Account</option>
+      </select>
+      <div class="invalid-feedback">Please select a payment method.</div>
+    </div>
 
-    <div id="card_info" class="mt-3">
+    <div id="card_info" class="mt-3" style="display: none">
       <h3>Card Information</h3>
       <div class="form-group">
         <label for="card_number">Card Number:</label>
-        <input type="text" name="card_number" class="form-control" required />
+        <input
+          type="text"
+          name="card_number"
+          id="card_number"
+          class="form-control"
+          pattern="\d{16}"
+          maxlength="16"
+          oninput="this.value = this.value.replace(/[^0-9]/g, '');"
+          data-payment-field="card"
+        />
+        <div class="invalid-feedback">
+          Please enter a valid 16-digit card number.
+        </div>
       </div>
       <div class="form-group">
         <label for="card_expiry_date">Expiry Date:</label>
         <input
           type="month"
           name="card_expiry_date"
+          id="card_expiry_date"
           class="form-control"
-          required
+          data-payment-field="card"
         />
+        <div class="invalid-feedback">Please select a valid expiry date.</div>
       </div>
       <div class="form-group">
         <label for="card_type">Card Type:</label>
-        <input type="text" name="card_type" class="form-control" required />
+        <select
+          name="card_type"
+          id="card_type"
+          class="form-control"
+          data-payment-field="card"
+        >
+          <option value="">Select Card Type</option>
+          <option value="VISA">VISA</option>
+          <option value="MASTER">MASTER</option>
+        </select>
+        <div class="invalid-feedback">Please select a card type.</div>
+      </div>
+    </div>
+
+    <div id="debit_card_info" class="mt-3" style="display: none">
+      <div class="form-group">
+        <label for="bank_name">Bank Name:</label>
+        <select
+          name="bank_name"
+          id="bank_name"
+          class="form-control"
+          data-payment-field="debit"
+        >
+          <option value="">Select Bank</option>
+          <option value="ANZ">ANZ</option>
+          <option value="BNZ">BNZ</option>
+          <option value="ASB">ASB</option>
+          <option value="Kiwibank">Kiwibank</option>
+        </select>
+        <div class="invalid-feedback">Please select a bank.</div>
       </div>
     </div>
 
@@ -152,6 +202,7 @@
       value="{{ available_balance }}"
     />
     <button type="submit" class="btn btn-primary mt-3">Place Order</button>
+    {% endif %}
   </form>
 </div>
 
@@ -159,17 +210,61 @@
   function togglePaymentFields() {
     const paymentMethod = document.getElementById("payment_method").value;
     const cardInfoDiv = document.getElementById("card_info");
+    const debitCardInfoDiv = document.getElementById("debit_card_info");
     const accountInfoDiv = document.getElementById("account_info");
 
-    if (paymentMethod === "credit_card" || paymentMethod === "debit_card") {
-      cardInfoDiv.style.display = "block";
-      accountInfoDiv.style.display = "none";
-    } else if (paymentMethod === "account_charge") {
-      cardInfoDiv.style.display = "none";
-      accountInfoDiv.style.display = "block";
-    } else {
-      cardInfoDiv.style.display = "none";
-      accountInfoDiv.style.display = "none";
+    // Hide all payment sections first
+    cardInfoDiv.style.display = "none";
+    debitCardInfoDiv.style.display = "none";
+    accountInfoDiv.style.display = "none";
+
+    // Reset all payment fields
+    document.querySelectorAll("[data-payment-field]").forEach((field) => {
+      field.required = false;
+      field.value = "";
+    });
+
+    // Show and set required fields based on payment method
+    switch (paymentMethod) {
+      case "credit_card":
+        cardInfoDiv.style.display = "block";
+        setCardFieldsRequired(true, false);
+        break;
+      case "debit_card":
+        cardInfoDiv.style.display = "block";
+        debitCardInfoDiv.style.display = "block";
+        setCardFieldsRequired(true, true);
+        break;
+      case "account_charge":
+        accountInfoDiv.style.display = "block";
+        checkAvailableBalance();
+        break;
+    }
+  }
+
+  function setCardFieldsRequired(cardRequired, debitRequired) {
+    document
+      .querySelectorAll('[data-payment-field="card"]')
+      .forEach((field) => {
+        field.required = cardRequired;
+      });
+    document
+      .querySelectorAll('[data-payment-field="debit"]')
+      .forEach((field) => {
+        field.required = debitRequired;
+      });
+  }
+
+  function checkAvailableBalance() {
+    const totalPrice = parseFloat(document.getElementById("total_price").value);
+    const availableBalance = parseFloat(
+      document.getElementById("availableBalance").textContent
+    );
+    const submitButton = document.querySelector("button[type='submit']");
+
+    submitButton.disabled = totalPrice > availableBalance;
+    if (totalPrice > availableBalance) {
+      alert("Order total exceeds available balance!");
     }
   }
 
@@ -183,7 +278,7 @@
           .querySelector("td:nth-child(3)")
           .textContent.replace("$", "")
       );
-      const quantity = parseInt(input.value);
+      const quantity = parseInt(input.value) || 0;
       totalPrice += price * quantity;
     });
 
@@ -191,32 +286,86 @@
       2
     )}`;
     document.getElementById("total_price").value = totalPrice.toFixed(2);
-
-    // Update the order total in the account info section
     document.getElementById("orderTotal").textContent = totalPrice.toFixed(2);
 
-    // Check if order total exceeds available balance
-    const availableBalance = parseFloat(
-      document.getElementById("availableBalance").textContent
-    );
-    const submitButton = document.querySelector("button[type='submit']");
-
-    if (totalPrice > availableBalance) {
-      submitButton.disabled = true;
-      alert("Order total exceeds available balance!");
-    } else {
-      submitButton.disabled = false;
+    // Check available balance if payment method is account charge
+    if (document.getElementById("payment_method").value === "account_charge") {
+      checkAvailableBalance();
     }
   }
 
-  document.querySelectorAll('input[type="number"]').forEach((input) => {
-    input.addEventListener("change", calculateTotalPrice);
-  });
+  function validateForm() {
+    const form = document.getElementById("orderForm");
+    const paymentMethod = document.getElementById("payment_method").value;
 
-  // Initialize payment fields on page load
+    if (!paymentMethod) {
+      alert("Please select a payment method.");
+      return false;
+    }
+
+    if (paymentMethod !== "account_charge") {
+      const requiredFields = form.querySelectorAll("[required]");
+      let isValid = true;
+
+      requiredFields.forEach((field) => {
+        if (!field.value) {
+          field.classList.add("is-invalid");
+          isValid = false;
+        } else {
+          field.classList.remove("is-invalid");
+        }
+      });
+
+      if (!isValid) {
+        alert("Please fill in all required fields.");
+        return false;
+      }
+    }
+
+    return true;
+  }
+
   document.addEventListener("DOMContentLoaded", function () {
+    // Initialize form state
     togglePaymentFields();
     calculateTotalPrice();
+
+    // Add event listeners for quantity changes
+    document.querySelectorAll('input[type="number"]').forEach((input) => {
+      input.addEventListener("change", calculateTotalPrice);
+    });
+
+    // Form submission handler
+    document
+      .getElementById("orderForm")
+      .addEventListener("submit", function (event) {
+        event.preventDefault();
+
+        const totalPrice = parseFloat(
+          document.getElementById("total_price").value
+        );
+        if (totalPrice === 0) {
+          alert(
+            "Your order total is $0. Please add items to your order before submitting."
+          );
+          return;
+        }
+
+        if (validateForm()) {
+          this.submit();
+        }
+      });
+
+    // Add validation listeners for payment fields
+    document.querySelectorAll("[data-payment-field]").forEach((field) => {
+      field.addEventListener("input", function () {
+        if (this.required && !this.value) {
+          this.classList.add("is-invalid");
+        } else {
+          this.classList.remove("is-invalid");
+        }
+      });
+    });
   });
 </script>
 {% endblock %}

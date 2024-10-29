@@ -13,15 +13,20 @@
     <nav class="navbar navbar-expand-lg navbar-light bg-light">
       <a class="navbar-brand" href="/">Veggie Shop</a>
       <div class="navbar-nav">
-        <a class="nav-item nav-link" href="/items">View Items</a>
-        {% if session %}
+        {% if session.get('id') %} {% if session.get('type') == "staff" %}
         <a class="nav-item nav-link" href="{{ url_for('get_total_sales') }}"
           >View Total Sales</a
         >
-        <a class="nav-item nav-link" href="{{ url_for('current_order')}}"
+        <a class="nav-item nav-link" href="{{ url_for('customer_list') }}"
+          >View all customer</a
+        >
+
+        {% endif %}
+        <a class="nav-item nav-link" href="/items">View Items</a>
+        <a class="nav-item nav-link" href="{{ url_for('current_order') }}"
           >Current Order</a
         >
-        <a class="nav-item nav-link" href="{{ url_for('previous_order')}}"
+        <a class="nav-item nav-link" href="{{ url_for('previous_order') }}"
           >Previous Orders</a
         >
         <a
@@ -32,11 +37,50 @@
         <a class="nav-item nav-link" href="/logout">Logout</a>
         {% else %}
         <a class="nav-item nav-link" href="/login">Login</a>
-        {%endif%}
+        {% endif %}
       </div>
     </nav>
 
-    <div class="container mt-4">{% block content %} {% endblock %}</div>
+    {% with messages = get_flashed_messages(with_categories=true) %} {% if
+    messages %} {% for category, message in messages %}
+    <div
+      class="alert alert-{{ category }} alert-dismissible fade show"
+      role="alert"
+    >
+      {{ message }}
+      <button
+        type="button"
+        class="close"
+        data-dismiss="alert"
+        aria-label="Close"
+      >
+        <span aria-hidden="true">&times;</span>
+      </button>
+    </div>
+    {% endfor %} {% endif %} {% endwith %}
+    <div class="container mt-4">
+      {% block content %}
+      <div
+        class="jumbotron jumbotron-fluid bg-success text-white text-center mb-0"
+      >
+        <div class="container">
+          <h1 class="display-4">Welcome to Veggie Shop</h1>
+          <p class="lead">
+            Fresh and healthy vegetables delivered to your doorstep!
+          </p>
+        </div>
+
+        <div class="text-center mt-4">
+          <img
+            src="{{ url_for('static', filename='main.png') }}"
+            class="img-fluid rounded"
+            alt="Veggie Shop Main Image"
+            style="max-width: 100%; height: auto"
+          />
+        </div>
+      </div>
+      {% endblock %}
+    </div>
 
     <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.3/dist/umd/popper.min.js"></script>

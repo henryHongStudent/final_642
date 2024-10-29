@@ -6,7 +6,7 @@ app = Flask(__name__)
 app.secret_key = 'Henry'
 
 # 데이터베이스 설정
-engine = create_engine('mysql+pymysql://root:Tmd%4078799858@localhost:3306/final_642', echo=False)
+engine = create_engine('mysql+pymysql://root:Tmd%4078799858@localhost:3306/final_642', echo=True)
 Session = sessionmaker(bind=engine)
 db_session = Session()
 
